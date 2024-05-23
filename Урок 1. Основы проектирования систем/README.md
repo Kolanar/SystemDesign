@@ -422,3 +422,203 @@ SLI (Service Level Indicator) - это метрика, которая измер
 
 Используя SLA, SLO и SLI вместе, поставщики услуг могут согласовывать ожидания клиентов, устанавливать измеримые цели и
 отслеживать производительность своих услуг, обеспечивая соответствие согласованным уровням обслуживания.
+
+## Удобство сопровождения
+
+-------------
+
+- **Возможность обновления без простоя (downtime)**
+
+    * Система спроектирована для обновления без прерывания работы пользователей.
+      Обновления можно проводить поэтапно, чтобы минимизировать влияние на доступность системы.
+
+
+- **Возможность отключения части машин без прерывания работы**
+
+    * Система спроектирована с архитектурой высокой доступности, которая позволяет отключать части машин для
+      обслуживания или
+      устранения неполадок без влияния на доступность службы.
+      Используются механизмы балансировки нагрузки и резервирования для распределения запросов между доступными
+      машинами.
+
+
+- **Удобный мониторинг системы и подробное логирование**
+
+    * Система предоставляет инструменты для мониторинга всех аспектов системы, включая производительность, использование
+      ресурсов и состояние компонентов.
+    * Ведется подробное логирование событий и ошибок, что облегчает диагностику и устранение проблем.
+
+
+- **Быстрая диагностика и устранение проблем**
+
+    * Система предоставляет инструменты и документацию для быстрого выявления и устранения проблем.
+      Она спроектирована с возможностью разделения на модули, что упрощает локализацию и исправление проблем.
+
+
+- **Легкость расширения системы**
+
+    * Система спроектирована с возможностью расширения, позволяя легко добавлять новые функции или увеличивать емкость
+      по мере
+      роста требований.
+      Она использует модульную архитектуру и стандартизированные интерфейсы, что облегчает интеграцию новых компонентов.
+
+## Балансировка нагрузки
+
+-----------------------
+
+Балансировка нагрузки - это процесс распределения запросов между несколькими серверами или другими ресурсами для
+оптимизации использования ресурсов и обеспечения высокой доступности. Существует несколько методов балансировки
+нагрузки:
+
+* **Round Robin (По круговой):** Запросы распределяются по серверам по очереди. Этот метод простой и легко реализуемый,
+  но он не учитывает загрузку серверов.
+
+    ```mermaid
+        sequenceDiagram
+        participant Client
+        participant Server1
+        participant Server2
+        participant Server3
+        
+        Client->Server1: Request 1
+        Server1->Client: Response 1
+        Client->Server2: Request 2
+        Server2->Client: Response 2
+        Client->Server3: Request 3
+        Server3->Client: Response 3
+        Client->Server1: Request 4
+        Server1->Client: Response 4
+        Client->Server2: Request 5
+        Server2->Client: Response 5
+        Client->Server3: Request 6
+        Server3->Client: Response 6
+    ```
+
+* **Weighted Round Robin (Взвешенный по круговой):** Улучшение метода Round Robin, которое позволяет назначать
+  разный
+  вес разным серверам в зависимости от их емкости или производительности.
+
+  ``` mermaid
+      sequenceDiagram
+      participant Client
+      participant Server1 weight=2
+      participant Server2 weight=1
+      participant Server3 weight=3
+      
+      Client->Server1: Request 1
+      Server1->Client: Response 1
+      Client->Server2: Request 2
+      Server2->Client: Response 2
+      Client->Server3: Request 3
+      Server3->Client: Response 3
+      Client->Server1: Request 4
+      Server1->Client: Response 4
+      Client->Server2: Request 5
+      Server2->Client: Response 5
+      Client->Server3: Request 6
+      Server3->Client: Response 6
+      Client->Server3: Request 7
+      Server3->Client: Response 7
+      Client->Server1: Request 8
+      Server1->Client: Response 8
+  ```
+* **Sticky session** - метод балансировки нагрузки, который гарантирует, что все запросы от одного клиента направляются
+  на один и тот же сервер. Это полезно для приложений, которым требуется сохранять состояние сеанса на стороне сервера,
+  например, для интернет-магазинов или банковских приложений
+
+    ```mermaid
+    sequenceDiagram
+    participant Client
+    participant Server
+    Note over Client,Server: Sticky Session
+    
+    Client->Server: Request 1
+    Server->Client: Response 1
+    Client->Server: Request 2
+    Server->Client: Response 2
+    Client->Server: Request 3
+    Server->Client: Response 3
+
+
+    ```    
+
+
+* **Least Connections (Наименьшее число соединений):** Запросы направляются на сервер с наименьшим количеством активных
+  соединений. Этот метод помогает распределять нагрузку более равномерно.
+
+    ```mermaid
+        sequenceDiagram
+        participant Client
+        participant Server1
+        participant Server2
+        participant Server3
+        participant Load Balancer
+        
+        Client->Load Balancer: Request
+        Load Balancer->Server1: Check load
+        Server1->Load Balancer: 2 active connections
+        Load Balancer->Server2: Check load
+        Server2->Load Balancer: 3 active connections
+        Load Balancer->Server3: Check load
+        Server3->Load Balancer: 1 active connection
+        Load Balancer->Client: Server3 assigned
+        Client->Server3: Request 1
+        Server3->Client: Response 1
+        Client->Server3: Request 2
+        Server3->Client: Response 2
+        Client->Server3: Request 3
+        Server3->Client: Response 3
+  
+    ```
+
+* **Least Response Time (Наименьшее время отклика):** Запросы направляются на сервер с наименьшим временем отклика при
+  обработке предыдущих запросов. Этот метод обеспечивает более быструю обработку запросов.
+
+    ```mermaid
+        sequenceDiagram
+    participant Client
+    participant Server1
+    participant Server2
+    participant Server3
+    participant Load Balancer
+    
+    Client->Load Balancer: Request
+    Load Balancer->Server1: Check load and response time
+    Server1->Load Balancer: 2 active connections, 100ms response time
+    Load Balancer->Server2: Check load and response time
+    Server2->Load Balancer: 3 active connections, 150ms response time
+    Load Balancer->Server3: Check load and response time
+    Server3->Load Balancer: 1 active connection, 50ms response time
+    Load Balancer->Client: Server3 assigned
+    Client->Server3: Request 1
+    Server3->Client: Response 1
+    Client->Server3: Request 2
+    Server3->Client: Response 2
+    Client->Server3: Request 3
+    Server3->Client: Response 3
+    ```
+* **IP Hashing (Хеширование IP-адресов):** Запросы от одного клиента всегда направляются на один и тот же сервер на
+  основе хеша IP-адреса клиента. Это обеспечивает согласованность сеанса и снижает нагрузку на другие серверы.
+
+### Алгоритмы балансировки нагрузки
+
+Существует несколько алгоритмов, которые можно использовать для реализации методов балансировки нагрузки:
+
+* **Random:** Запросы распределяются случайным образом между серверами.
+* **Weighted Random:** Запросы распределяются случайным образом, но с весами, назначенными серверам.
+* **Least Connections:** Выбирается сервер с наименьшим количеством активных соединений.
+* **Least Response Time:** Выбирается сервер с наименьшим временем отклика, измеренным по предыдущим запросам.
+* **Consistent Hashing:** Запросы хешируются, и сервер выбирается на основе хеша запроса.
+
+### Решения для балансировки нагрузки
+
+Существует несколько аппаратных и программных решений для балансировки нагрузки:
+
+* **Аппаратные балансировщики нагрузки:** Специализированные устройства, предназначенные для распределения нагрузки
+  между серверами. Они обеспечивают высокую производительность и отказоустойчивость.
+* **Программные балансировщики нагрузки:** Программное обеспечение, которое работает на обычных серверах и распределяет
+  нагрузку между ними. Они более гибкие и настраиваемые, но могут иметь более низкую производительность, чем аппаратные
+  балансировщики.
+* **Облачные службы балансировки нагрузки:** Управляемые облачные сервисы, которые предоставляют функции балансировки
+  нагрузки без необходимости развертывать и обслуживать собственные решения.
+
